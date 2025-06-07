@@ -3,17 +3,14 @@ import random
 pygame.init()
 
 font = pygame.font.SysFont('Arial', 16)
+pygame.mouse.set_visible(False)
 
 class Settings:
     stickySand = False
     display_ui_controls = False
-
-class Graphics:
     fg_fill = True
-    bg_fill = False
 
 settings = Settings()
-graphics = Graphics()
 scale = 10
 grid_width = 80
 grid_height = 80
@@ -66,9 +63,7 @@ def input():
     if keys[pygame.K_SPACE]:
         settings.stickySand = not settings.stickySand
     if keys[pygame.K_f]:
-        graphics.fg_fill = not graphics.fg_fill
-    if keys[pygame.K_b]:
-        graphics.bg_fill = not graphics.bg_fill
+        settings.fg_fill = not settings.fg_fill
     if keys[pygame.K_1]:
         color_id = 1
     elif keys[pygame.K_2]:
@@ -102,25 +97,34 @@ def input():
         sand[y][x] = color_id+color_frac if sand[y][x] == 0 else sand[y][x]
         # Prevent out of array bounds when - or + index
         # Fill
-        if (y > radius and y < grid_height-radius) and (x > radius and x < grid_width-radius):
-            for i in range(radius):
-                for j in range(radius):
-                    sand[y+i][x+j] = color_id+color_frac if sand[y+i][x+j] == 0 else sand[y+i][x+j]
-                    sand[y+i][x-j] = color_id+color_frac if sand[y+i][x-j] == 0 else sand[y+i][x-j]
-                    sand[y-i][x+j] = color_id+color_frac if sand[y-i][x+j] == 0 else sand[y-i][x+j]
-                    sand[y-i][x-j] = color_id+color_frac if sand[y-i][x-j] == 0 else sand[y-i][x-j]
+        for i in range(radius):
+            for j in range(radius):
+                if x-j < 0 or y-i < 0:
+                    continue
+                try: sand[y+i][x+j] = color_id+color_frac if sand[y+i][x+j] == 0 else sand[y+i][x+j]
+                except: pass
+                try: sand[y+i][x-j] = color_id+color_frac if sand[y+i][x-j] == 0 else sand[y+i][x-j]
+                except: pass
+                try: sand[y-i][x+j] = color_id+color_frac if sand[y-i][x+j] == 0 else sand[y-i][x+j]
+                except: pass
+                try: sand[y-i][x-j] = color_id+color_frac if sand[y-i][x-j] == 0 else sand[y-i][x-j]
+                except: pass
     # Delete
     elif pygame.mouse.get_pressed()[2]:
         sand[y][x] = 0
         # Prevent out of array bounds when - or + index
-        if (y > radius and y < grid_height-radius) and (x > radius and x < grid_width-radius):
-            for i in range(radius):
-                for j in range(radius):
-                    sand[y+i][x+j] = 0
-                    sand[y+i][x-j] = 0
-                    sand[y-i][x+j] = 0
-                    sand[y-i][x-j] = 0
-
+        for i in range(radius):
+            for j in range(radius):
+                if x-j < 0 or y-i < 0:
+                    continue
+                try: sand[y+i][x+j] = 0 
+                except: pass
+                try: sand[y+i][x-j] = 0
+                except: pass
+                try: sand[y-i][x+j] = 0
+                except: pass
+                try: sand[y-i][x-j] = 0
+                except: pass
 def update():
     # Sand Grid Movement
     for y in range(grid_height-2, -1, -1):
@@ -146,14 +150,17 @@ def drawUI():
     text_temp = "Press ESC to hide controls"
     screen.blit(font.render(text_temp, True, WHITE), ((screen_width/2)-16-len(text_temp), 20))
     text_offset = offset_amt
-    screen.blit(font.render(f"- MOUSE LEFT: Create sand", True, WHITE), (20, text_offset))
+    screen.blit(font.render(f"- MOUSE LEFT: Place sand", True, WHITE), (20, text_offset))
     text_offset += offset_amt
     screen.blit(font.render(f"- MOUSE RIGHT: Remove sand", True, WHITE), (20, text_offset))
     text_offset += offset_amt
+    screen.blit(font.render(f"- MOUSE SCROLL WHEEL: Adjust cursor size", True, WHITE), (20, text_offset))
+    text_offset += offset_amt
     screen.blit(font.render(f"- SPACEBAR: Toggle dry/wet sand", True, WHITE), (20, text_offset))
     text_offset += offset_amt
-    screen.blit(font.render(f"- Press Nums 1 - 7 (to change sand color)", True, WHITE), (20, text_offset))
+    screen.blit(font.render(f"- Press F: Toggle x-ray mode ", True, WHITE), (20, text_offset))
     text_offset += offset_amt
+    screen.blit(font.render(f"- Press Nums 1 - 7 (to change sand color)", True, WHITE), (20, text_offset))
 
 def draw():
     screen.fill(BLACK)
@@ -178,18 +185,12 @@ def draw():
                 # Limit c from going too dark
                 elif c < 200:
                     c = 200
-                
                 # Determine color
                 color = determine_color(sand_color_id, c)
-                # if graphics.bg_fill:
-                #     pygame.draw.rect(screen, (128, 128, 128), (x*scale, y*scale, scale, scale))
-                # else:
-                #     pygame.draw.rect(screen, (128, 128, 128), (x*scale, y*scale, scale, scale), 1)
-                if graphics.fg_fill:
+                if settings.fg_fill:
                     pygame.draw.rect(screen, color, (x*scale, y*scale, scale, scale))
                 else:
                     pygame.draw.rect(screen, color, (x*scale, y*scale, scale, scale), 1)
-                # pygame.draw.rect(screen, BLACK, (x*scale, y*scale, scale, scale), 1)
             
             # Mouse Marker Outline        
             (x_mouse, y_mouse) = pygame.mouse.get_pos()
