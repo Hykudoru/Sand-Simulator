@@ -164,12 +164,6 @@ def drawUI():
 
 def draw():
     screen.fill(BLACK)
-    
-    if settings.display_ui_controls:
-        drawUI()
-    else:
-        screen.blit(font.render(f"Press ESC for controls", True, WHITE), (20, 20))
-
     for y in range(grid_height):
         for x in range(grid_width):
             sand_color_id = sand[y][x]
@@ -199,7 +193,13 @@ def draw():
                 pygame.draw.rect(screen, color, (x_mouse-(scale), y_mouse-(scale), scale*radius, scale*radius), 1)
             else:
                 pygame.draw.rect(screen, color, (x_mouse-(radius*scale), y_mouse-(radius*scale), scale*2*radius, scale*2*radius), 1)
-            
+    
+    # UI
+    if settings.display_ui_controls:
+        drawUI()
+    else:
+        screen.blit(font.render(f"Press ESC for controls", True, WHITE), (20, 20))
+
     pygame.display.flip()
 
 # The game loop
